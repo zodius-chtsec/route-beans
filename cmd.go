@@ -17,15 +17,34 @@ func (writer logWriter) Write(bytes []byte) (int, error) {
 	return fmt.Print("[+] " + string(bytes))
 }
 
+func EnsureProfileDir(profilePath string) {
+	if _, err := os.Stat(profilePath); os.IsNotExist(err) {
+		os.MkdirAll(profilePath, 0755)
+		log.Printf("Profile folder not exists, created in %s", profilePath)
+	}
+}
+
 func main() {
 	log.SetFlags(0)
 	log.SetOutput(new(logWriter))
 
 	routeRepo := repo.NewRouteRepo()
 	profileRepo := repo.NewProfileRepo()
-	routeBeanService := service.NewRouteBeanService(routeRepo, profileRepo)
+
+	homepath, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	profilePath := homepath + "/.route-beans/profiles"
+
+	EnsureProfileDir(profilePath)
+
+	routeBeanService := service.NewRouteBeanService(routeRepo, profileRepo, profilePath)
 
 	app := &cli.App{
+		Name:  "route-beans",
+		Usage: "Cross platform routing table management",
 		Commands: []*cli.Command{
 			{
 				Name:  "list",

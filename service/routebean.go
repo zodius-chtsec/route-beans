@@ -18,19 +18,26 @@ func root_required() error {
 type routeBeanService struct {
 	routeRepo   model.RouteRepo
 	profileRepo model.ProfileRepo
+	profileDir  string
 }
 
-func NewRouteBeanService(routeRepo model.RouteRepo, profileRepo model.ProfileRepo) model.RouteBeanService {
+func NewRouteBeanService(routeRepo model.RouteRepo, profileRepo model.ProfileRepo, profileDir string) model.RouteBeanService {
 	return &routeBeanService{
 		routeRepo,
 		profileRepo,
+		profileDir,
 	}
 }
 
 func (s *routeBeanService) ListProfiles() (err error) {
-	ymls, err := filepath.Glob("profiles/*.yml")
+	ymls, err := filepath.Glob(s.profileDir + "/*.yml")
 	if err != nil {
 		return err
+	}
+
+	if len(ymls) == 0 {
+		log.Print("No profile file found, check out example config on github.")
+		return
 	}
 
 	for _, yml := range ymls {
@@ -45,7 +52,7 @@ func (s *routeBeanService) ListProfiles() (err error) {
 }
 
 func (s *routeBeanService) findProfile(profileName string) (profile model.Profile, err error) {
-	ymls, err := filepath.Glob("profiles/*.yml")
+	ymls, err := filepath.Glob(s.profileDir + "/*.yml")
 	if err != nil {
 		return
 	}
